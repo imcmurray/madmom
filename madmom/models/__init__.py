@@ -2,8 +2,28 @@
 """
 Models package.
 
-Please see the LICENSE file for licensing details of this package.
+This package contains pre-trained neural network models for madmom.
 
+SECURITY NOTICE:
+----------------
+The models in this package are stored as Python pickle (.pkl) files.
+Pickle files can execute arbitrary code when loaded, which is a security risk.
+
+To mitigate this risk, madmom-modern provides:
+1. SHA256 hash verification of all bundled models
+2. A RestrictedUnpickler that only allows known-safe classes
+
+Always use the secure loading functions provided by this module:
+- `secure_load(filepath)` - Load with hash verification and restricted unpickling
+- `load_model(path)` - Load bundled models by relative path
+
+NEVER load pickle files from untrusted sources!
+
+For more information, see:
+- https://docs.python.org/3/library/pickle.html#restricting-globals
+- https://huggingface.co/docs/hub/security-pickle
+
+Please see the LICENSE file for licensing details of this package.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -12,6 +32,15 @@ import os
 import glob
 
 MODEL_PATH = os.path.dirname(__file__)
+
+# Import secure loading utilities
+from .secure_loader import (
+    secure_load,
+    load_model,
+    verify_model_integrity,
+    ModelIntegrityError,
+    UnsafePickleError,
+)
 
 
 def models(pattern, path=MODEL_PATH):

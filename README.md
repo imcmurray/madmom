@@ -25,6 +25,28 @@ This fork includes the following modernization updates:
 - **Modern build system**: Added `pyproject.toml` for PEP 517/518 compliance
 - **Updated Cython**: Compatible with Cython 3.x
 - **Updated dependencies**: Uses latest secure versions of NumPy, SciPy, and other dependencies
+- **Secure model loading**: SHA256 hash verification and restricted unpickling for pickle files
+
+## Security
+
+The pre-trained models use Python pickle (`.pkl`) files, which can execute arbitrary code when loaded. This is a known security risk in ML/AI.
+
+**madmom-modern mitigates this risk with:**
+- SHA256 hash verification of all bundled models
+- Restricted unpickler that only allows known-safe classes
+- Module allowlisting to prevent dangerous imports
+
+```python
+from madmom.models import secure_load, ModelIntegrityError
+
+# Safely load a model with hash verification
+try:
+    model = secure_load("/path/to/model.pkl")
+except ModelIntegrityError:
+    print("Model file may have been tampered with!")
+```
+
+See [SECURITY.md](SECURITY.md) for detailed security information and best practices.
 
 ## Installation
 
@@ -45,10 +67,10 @@ pip install -e ".[dev]"
 ## Requirements
 
 - Python >= 3.11
-- NumPy >= 2.0
-- SciPy >= 1.13
+- NumPy >= 2.2
+- SciPy >= 1.14
 - Cython >= 3.0
-- mido >= 1.2.8
+- mido >= 1.3
 
 ## Quick Start
 
