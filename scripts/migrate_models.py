@@ -1,0 +1,79 @@
+#!/usr/bin/env python
+"""
+Script to migrate pickled model files to NumPy 2.x compatible format.
+
+This re-saves all .pkl files in the models directory to update dtype definitions
+that use align=0/1 (integers) to use align=False/True (booleans).
+
+Usage (from the repository root, with venv activated):
+    python scripts/migrate_models.py
+
+This will eliminate the VisibleDeprecationWarning about dtype align parameter.
+"""
+
+import os
+import pickle
+import sys
+import warnings
+from pathlib import Path
+
+# Add the parent directory to sys.path so madmom can be imported
+script_dir = Path(__file__).parent.resolve()
+sys.path.insert(0, str(script_dir.parent))
+
+
+def migrate_model(filepath):
+    """Load and re-save a single model file."""
+    print(f"  Migrating: {filepath.name}...", end=" ")
+
+    # Load with latin1 encoding for Python 2 compatibility
+    with open(filepath, 'rb') as f:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            obj = pickle.load(f, encoding='latin1')
+
+    # Re-save with current pickle protocol
+    with open(filepath, 'wb') as f:
+        pickle.dump(obj, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+    print("done")
+
+
+def main():
+    # Find the models directory
+    script_dir = Path(__file__).parent
+    models_dir = script_dir.parent / "madmom" / "models"
+
+    if not models_dir.exists():
+        print(f"Error: Models directory not found at {models_dir}")
+        return 1
+
+    # Find all .pkl files
+    pkl_files = list(models_dir.rglob("*.pkl"))
+
+    if not pkl_files:
+        print("No .pkl files found")
+        return 0
+
+    print(f"Found {len(pkl_files)} model files to migrate\n")
+
+    # Group by subdirectory for better output
+    current_dir = None
+    for filepath in sorted(pkl_files):
+        parent = filepath.parent.relative_to(models_dir)
+        if parent != current_dir:
+            current_dir = parent
+            print(f"\n{parent}/")
+
+        try:
+            migrate_model(filepath)
+        except Exception as e:
+            print(f"FAILED: {e}")
+            return 1
+
+    print(f"\nSuccessfully migrated {len(pkl_files)} model files")
+    return 0
+
+
+if __name__ == "__main__":
+    exit(main())
