@@ -69,6 +69,7 @@ madmom = [
     "models/__init__.py",
     "models/secure_loader.py",
     "models/model_manifest.json",
+    "models/security_scan_results.json",
     "models/LICENSE",
     "models/README.rst",
     "models/beats/*/*.pkl",

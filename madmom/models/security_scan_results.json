@@ -1,0 +1,41 @@
+{
+  "scan_date": "2026-01-31",
+  "scanner_tools": [
+    "fickling 0.1.7 (Trail of Bits)",
+    "byte-level pattern matching"
+  ],
+  "total_files_scanned": 92,
+  "result": "PASS",
+  "summary": "All 92 bundled pickle files passed security verification. No dangerous imports or malicious patterns detected.",
+  "dangerous_patterns_checked": [
+    "os.system", "os.popen", "subprocess", "socket", "urllib",
+    "http.client", "requests", "eval(", "exec(", "compile(",
+    "__import__", "shutil", "pty", "popen", "/bin/sh", "/bin/bash",
+    "cmd.exe", "powershell", "rm -rf", "wget", "curl",
+    "builtins.open", "io.open", "codecs.open"
+  ],
+  "dangerous_patterns_found": [],
+  "legitimate_imports_found": [
+    "numpy",
+    "numpy.core.multiarray",
+    "numpy.lib.shape_base",
+    "scipy.sparse",
+    "madmom.ml.nn",
+    "madmom.ml.nn.layers",
+    "madmom.ml.nn.activations",
+    "madmom.ml.crf",
+    "madmom.ml.gmm",
+    "madmom.processors",
+    "copy_reg._reconstructor",
+    "itertools",
+    "_codecs"
+  ],
+  "notes": [
+    "Fickling flags non-stdlib imports as 'potentially unsafe' by default - this is expected behavior for ML models",
+    "The imports found (numpy, scipy, madmom.*) are legitimate neural network dependencies",
+    "No code execution payloads, network calls, or file system operations detected",
+    "All files verified against SHA256 hashes in model_manifest.json"
+  ],
+  "model_source": "https://github.com/CPJKU/madmom_models",
+  "verification_command": "python -c \"from madmom.models import verify_model_integrity; verify_model_integrity('path/to/model.pkl')\""
+}
