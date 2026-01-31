@@ -11,7 +11,7 @@ Usage (from the repository root, with venv activated):
 This will eliminate the VisibleDeprecationWarning about dtype align parameter.
 """
 
-import os
+import io
 import pickle
 import sys
 import warnings
@@ -22,6 +22,27 @@ script_dir = Path(__file__).parent.resolve()
 sys.path.insert(0, str(script_dir.parent))
 
 
+# Module redirections for NumPy 2.x compatibility
+# NumPy 2.0 reorganized internal modules
+NUMPY_MODULE_REDIRECTS = {
+    'numpy.lib.shape_base': 'numpy.lib._shape_base_impl',
+    'numpy.core.multiarray': 'numpy._core.multiarray',
+    'numpy.core.numeric': 'numpy._core.numeric',
+    'numpy.core.umath': 'numpy._core.umath',
+    'numpy.core._multiarray_umath': 'numpy._core._multiarray_umath',
+}
+
+
+class NumpyBackwardsCompatUnpickler(pickle.Unpickler):
+    """Custom unpickler that handles NumPy 2.x module reorganization."""
+
+    def find_class(self, module, name):
+        # Check if this module needs to be redirected
+        if module in NUMPY_MODULE_REDIRECTS:
+            module = NUMPY_MODULE_REDIRECTS[module]
+        return super().find_class(module, name)
+
+
 def migrate_model(filepath):
     """Load and re-save a single model file.
 
@@ -30,10 +51,12 @@ def migrate_model(filepath):
     print(f"  Migrating: {filepath.name}...", end=" ", flush=True)
 
     # Load with latin1 encoding for Python 2 compatibility
+    # Use custom unpickler to handle NumPy 2.x module changes
     with open(filepath, 'rb') as f:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            obj = pickle.load(f, encoding='latin1')
+            unpickler = NumpyBackwardsCompatUnpickler(f, encoding='latin1')
+            obj = unpickler.load()
 
     # Re-save with current pickle protocol
     with open(filepath, 'wb') as f:
