@@ -31,8 +31,14 @@ This fork includes the following modernization updates:
 
 The pre-trained models use Python pickle (`.pkl`) files, which can execute arbitrary code when loaded. This is a known security risk in ML/AI.
 
-**madmom-modern mitigates this risk with:**
-- SHA256 hash verification of all bundled models
+**All 92 bundled models have been security scanned:**
+- Scanned with [Fickling](https://github.com/trailofbits/fickling) (Trail of Bits) and byte-level pattern matching
+- No dangerous imports found (no `os`, `subprocess`, `socket`, `eval`, etc.)
+- Only legitimate imports: `numpy`, `scipy.sparse`, `madmom.ml.nn.*`
+- Full scan results in `madmom/models/security_scan_results.json`
+
+**madmom-modern mitigates pickle risks with:**
+- SHA256 hash verification of all bundled models (`model_manifest.json`)
 - Restricted unpickler that only allows known-safe classes
 - Module allowlisting to prevent dangerous imports
 
