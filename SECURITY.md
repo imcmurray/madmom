@@ -21,6 +21,19 @@ If you load a malicious pickle file, an attacker could:
 
 According to [Snyk research](https://snyk.io/articles/python-pickle-poisoning-and-backdooring-pth-files/), 83.5% of ML models on platforms like HuggingFace use pickle-based formats, making this a widespread concern.
 
+### Bundled Model Verification
+
+All 92 pre-trained model files bundled with madmom-modern have been security scanned using:
+- [Fickling](https://github.com/trailofbits/fickling) - Trail of Bits' pickle decompiler and analyzer
+- Byte-level pattern matching for dangerous imports
+
+**Scan Results:**
+- No dangerous module imports detected (no `os`, `subprocess`, `socket`, etc.)
+- Only expected imports found: `numpy`, `scipy.sparse`, `madmom.ml.nn.*`, `copy_reg`
+- All files contain only neural network weights and layer definitions
+
+The models originate from the official [CPJKU/madmom_models](https://github.com/CPJKU/madmom_models) repository.
+
 ### How madmom-modern Mitigates This Risk
 
 We implement multiple layers of defense:
