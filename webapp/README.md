@@ -23,14 +23,27 @@ A browser-based interface for visualizing beat and downbeat detection using the 
 
 ## Installation
 
-1. First, install madmom-modern from the parent directory:
+1. Create and activate a virtual environment (from the project root):
 
 ```bash
 cd /path/to/madmom-modern
+
+# Create virtual environment
+python -m venv venv
+
+# Activate it
+source venv/bin/activate  # On Linux/macOS
+# or
+venv\Scripts\activate     # On Windows
+```
+
+2. Install madmom-modern:
+
+```bash
 pip install -e .
 ```
 
-2. Install webapp dependencies:
+3. Install webapp dependencies:
 
 ```bash
 cd webapp
@@ -39,12 +52,21 @@ pip install -r requirements.txt
 
 ## Running the Application
 
+Make sure your virtual environment is activated before running:
+
 ```bash
+# Activate venv if not already active
+source venv/bin/activate  # On Linux/macOS (from project root)
+
 cd webapp
 python app.py
 ```
 
 The application will start on `http://localhost:5000`
+
+## Sample Files
+
+Sample audio files are available in the `samples/` directory at the project root. These appear automatically in the web interface for quick testing.
 
 ## Usage
 

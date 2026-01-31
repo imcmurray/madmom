@@ -549,6 +549,67 @@
             text-decoration: none;
         }
 
+        .samples-section {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .samples-section h3 {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .samples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 12px;
+        }
+
+        .sample-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--accent-secondary);
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sample-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .sample-icon {
+            font-size: 24px;
+        }
+
+        .sample-info {
+            flex: 1;
+        }
+
+        .sample-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .sample-size {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .no-samples {
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 20px;
+        }
+
         @media (max-width: 768px) {
             header h1 {
                 font-size: 1.8rem;
@@ -585,6 +646,14 @@
             <p style="color: var(--text-secondary); margin-top: 15px; font-size: 0.9rem;">
                 Supported formats: WAV, MP3, FLAC, OGG, M4A, AAC (max 50MB)
             </p>
+        </div>
+
+        <!-- Sample Files Section -->
+        <div class="samples-section" id="samples-section">
+            <h3>📂 Sample Files</h3>
+            <div class="samples-grid" id="samples-grid">
+                <div class="no-samples">Loading samples...</div>
+            </div>
         </div>
 
         <!-- Player Section -->
@@ -778,6 +847,7 @@
         let currentFile = null;
         let currentFilename = null;
         let isPlaying = false;
+        let isSampleFile = false;
         let beatData = [];
         let beats = [];
         let downbeats = [];
@@ -794,6 +864,85 @@
         const beatMarkers = document.getElementById('beat-markers');
         const playhead = document.getElementById('playhead');
         const progressFill = document.getElementById('progress-fill');
+        const samplesSection = document.getElementById('samples-section');
+        const samplesGrid = document.getElementById('samples-grid');
+
+        // Load sample files on page load
+        loadSamples();
+
+        async function loadSamples() {
+            try {
+                const response = await fetch('/samples');
+                const data = await response.json();
+
+                if (data.samples && data.samples.length > 0) {
+                    samplesGrid.innerHTML = data.samples.map(sample => `
+                        <div class="sample-card" onclick="loadSample('${sample.filename}')">
+                            <span class="sample-icon">🎵</span>
+                            <div class="sample-info">
+                                <div class="sample-name">${sample.filename}</div>
+                                <div class="sample-size">${sample.size_mb} MB</div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    samplesGrid.innerHTML = '<div class="no-samples">No sample files available. Add audio files to the samples/ directory.</div>';
+                }
+            } catch (error) {
+                samplesGrid.innerHTML = '<div class="no-samples">Could not load samples.</div>';
+            }
+        }
+
+        async function loadSample(filename) {
+            showStatus('Loading sample...', 'loading');
+            isSampleFile = true;
+            currentFilename = filename;
+            currentFile = null;
+
+            // Set up audio player with sample file
+            const audioUrl = `/samples/${filename}`;
+            audioPlayer.src = audioUrl;
+
+            document.getElementById('song-title').textContent = filename;
+
+            // Wait for audio to load
+            audioPlayer.addEventListener('loadedmetadata', async () => {
+                duration = audioPlayer.duration;
+                document.getElementById('duration').textContent = formatTime(duration);
+                document.getElementById('song-meta').textContent = `Duration: ${formatTime(duration)} (Sample File)`;
+
+                // Draw waveform from URL
+                await drawWaveformFromUrl(audioUrl);
+
+                // Show player section
+                uploadSection.classList.add('hidden');
+                samplesSection.classList.add('hidden');
+                playerSection.classList.add('visible');
+                paramsSection.classList.remove('hidden');
+
+                hideStatus();
+            }, { once: true });
+
+            audioPlayer.addEventListener('error', () => {
+                showStatus('Error loading sample file', 'error');
+            }, { once: true });
+        }
+
+        async function drawWaveformFromUrl(url) {
+            try {
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+
+                const response = await fetch(url);
+                const arrayBuffer = await response.arrayBuffer();
+                audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+                drawWaveform(audioBuffer);
+            } catch (error) {
+                console.error('Error drawing waveform:', error);
+            }
+        }
 
         // File Upload Handling
         const fileInput = document.getElementById('file-input');
@@ -821,6 +970,7 @@
 
         async function handleFile(file) {
             showStatus('Uploading file...', 'loading');
+            isSampleFile = false;
 
             const formData = new FormData();
             formData.append('file', file);
@@ -858,6 +1008,7 @@
 
                 // Show player section
                 uploadSection.classList.add('hidden');
+                samplesSection.classList.add('hidden');
                 playerSection.classList.add('visible');
                 paramsSection.classList.remove('hidden');
 
@@ -1041,6 +1192,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         filename: currentFilename,
+                        is_sample: isSampleFile,
                         mode: mode,
                         fps: parseInt(document.getElementById('fps').value),
                         min_bpm: parseFloat(document.getElementById('min-bpm').value),
@@ -1151,8 +1303,10 @@
             playhead.style.left = '0';
 
             uploadSection.classList.remove('hidden');
+            samplesSection.classList.remove('hidden');
             playerSection.classList.remove('visible');
             resultsSection.classList.add('hidden');
+            isSampleFile = false;
 
             fileInput.value = '';
         }

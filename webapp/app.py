@@ -28,6 +28,7 @@ app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
 app.config['UPLOAD_FOLDER'] = Path(__file__).parent / 'uploads'
 app.config['UPLOAD_FOLDER'].mkdir(exist_ok=True)
+app.config['SAMPLES_FOLDER'] = Path(__file__).parent.parent / 'samples'
 
 ALLOWED_EXTENSIONS = {'wav', 'mp3', 'flac', 'ogg', 'm4a', 'aac'}
 
@@ -173,6 +174,33 @@ def serve_upload(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
+@app.route('/samples')
+def list_samples():
+    """List available sample files."""
+    samples_dir = app.config['SAMPLES_FOLDER']
+    if not samples_dir.exists():
+        return jsonify({'samples': []})
+
+    samples = []
+    for ext in ALLOWED_EXTENSIONS:
+        for filepath in samples_dir.glob(f'*.{ext}'):
+            samples.append({
+                'filename': filepath.name,
+                'size': filepath.stat().st_size,
+                'size_mb': round(filepath.stat().st_size / (1024 * 1024), 2)
+            })
+
+    # Sort by filename
+    samples.sort(key=lambda x: x['filename'])
+    return jsonify({'samples': samples})
+
+
+@app.route('/samples/<filename>')
+def serve_sample(filename):
+    """Serve sample files."""
+    return send_from_directory(app.config['SAMPLES_FOLDER'], filename)
+
+
 @app.route('/process', methods=['POST'])
 def process_audio():
     """Process audio file for beat/downbeat detection."""
@@ -182,7 +210,13 @@ def process_audio():
         return jsonify({'error': 'No filename provided'}), 400
 
     filename = secure_filename(data['filename'])
-    filepath = app.config['UPLOAD_FOLDER'] / filename
+    is_sample = data.get('is_sample', False)
+
+    # Determine file path based on whether it's a sample or upload
+    if is_sample:
+        filepath = app.config['SAMPLES_FOLDER'] / filename
+    else:
+        filepath = app.config['UPLOAD_FOLDER'] / filename
 
     if not filepath.exists():
         return jsonify({'error': 'File not found'}), 404

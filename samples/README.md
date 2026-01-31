@@ -10,6 +10,21 @@ This directory contains sample audio files for testing beat and downbeat detecti
 
 ## Usage
 
+First, set up and activate a virtual environment:
+
+```bash
+cd /path/to/madmom-modern
+
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install madmom-modern
+pip install -e .
+```
+
+Then you can use the sample files in Python:
+
 ```python
 import madmom
 
@@ -30,10 +45,15 @@ print(f"Downbeats: {downbeats}")
 
 ## Web Interface
 
-You can also test files using the web interface:
+You can also test files using the web interface. Sample files will appear automatically on the main page.
 
 ```bash
+# Make sure venv is activated
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
 cd webapp
+pip install -r requirements.txt
 python app.py
-# Open http://localhost:5000 and upload a sample file
+
+# Open http://localhost:5000 - sample files will be shown on the page
 ```

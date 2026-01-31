@@ -61,12 +61,21 @@ See [SECURITY.md](SECURITY.md) for detailed security information and best practi
 ```bash
 git clone https://github.com/imcmurray/madmom-modern.git
 cd madmom-modern
+
+# Create and activate a virtual environment (recommended)
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
 pip install .
 ```
 
 ### Development Installation
 
 ```bash
+# Create and activate a virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
 pip install -e ".[dev]"
 ```
 
@@ -142,7 +151,11 @@ A browser-based interface is included for visualizing beat detection results.
 ### Running the Web App
 
 ```bash
-# Install madmom-modern first
+# First, set up and activate a virtual environment if you haven't already
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install madmom-modern
 pip install -e .
 
 # Install web dependencies and run
@@ -151,7 +164,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Then open `http://localhost:5000` in your browser.
+Then open `http://localhost:5000` in your browser. Sample audio files are available in the `samples/` directory for testing.
 
 ### Web Interface Features
 
