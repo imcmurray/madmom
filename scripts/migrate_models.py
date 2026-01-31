@@ -23,8 +23,11 @@ sys.path.insert(0, str(script_dir.parent))
 
 
 def migrate_model(filepath):
-    """Load and re-save a single model file."""
-    print(f"  Migrating: {filepath.name}...", end=" ")
+    """Load and re-save a single model file.
+
+    Returns True if successful, False if skipped due to missing dependencies.
+    """
+    print(f"  Migrating: {filepath.name}...", end=" ", flush=True)
 
     # Load with latin1 encoding for Python 2 compatibility
     with open(filepath, 'rb') as f:
@@ -37,6 +40,7 @@ def migrate_model(filepath):
         pickle.dump(obj, f, protocol=pickle.HIGHEST_PROTOCOL)
 
     print("done")
+    return True
 
 
 def main():
@@ -57,6 +61,10 @@ def main():
 
     print(f"Found {len(pkl_files)} model files to migrate\n")
 
+    # Track results
+    migrated = 0
+    skipped = []
+
     # Group by subdirectory for better output
     current_dir = None
     for filepath in sorted(pkl_files):
@@ -66,12 +74,23 @@ def main():
             print(f"\n{parent}/")
 
         try:
-            migrate_model(filepath)
+            if migrate_model(filepath):
+                migrated += 1
+        except AttributeError as e:
+            # Missing class/attribute - model uses unimplemented features
+            print(f"SKIPPED (missing: {e})")
+            skipped.append((filepath.relative_to(models_dir), str(e)))
         except Exception as e:
             print(f"FAILED: {e}")
             return 1
 
-    print(f"\nSuccessfully migrated {len(pkl_files)} model files")
+    print(f"\n\nMigrated {migrated} model files")
+
+    if skipped:
+        print(f"Skipped {len(skipped)} model files (missing layer implementations):")
+        for path, reason in skipped:
+            print(f"  - {path}")
+
     return 0
 
 
