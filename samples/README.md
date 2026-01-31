@@ -2,6 +2,22 @@
 
 This directory contains sample audio files for testing beat and downbeat detection.
 
+## License
+
+The audio files in this directory are **© RinseRepeatLabs.com** and are included in this repository with permission.
+
+**Permitted uses:**
+- Learning and educational purposes
+- Testing and development of beat detection software
+- Non-commercial research and personal projects
+
+**Not permitted:**
+- Commercial use of any kind
+- Redistribution outside of this repository
+- Use in commercial products or services
+
+For commercial licensing inquiries, contact RinseRepeatLabs.com.
+
 ## Files
 
 | File | BPM | Time Signature | Description |
